@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -std=c++17
+CFLAGS = -std=c++17 -static-libgcc -static-libstdc++
 LDFLAGS = -mwindows
 
 # Additional libraries
