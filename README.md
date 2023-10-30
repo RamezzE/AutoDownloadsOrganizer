@@ -21,8 +21,8 @@ targetDirectory = getDownloadsFolder(); // Comment or remove this line
 ### Terminal
 - You can download the latest version of MinGW g++ from this link (https://www.msys2.org/)
 ```
-g++ -std=c++17 -c main.cpp
-g++ -std=c++17 -o AutoDownloadsOrganizer.exe main.o -mwindows -lole32 -lshell32 -luuid
+g++ -std=c++17 -static-libgcc -static-libstdc++ -c main.cpp
+g++ -std=c++17 -static-libgcc -static-libstdc++ -o main.exe main.o -mwindows -lole32 -lshell32 -luuid
 ```
 
 ### MS Build (Visual Studio)
