@@ -13,7 +13,7 @@ You can change the target folder by changing this in the main function of the co
 // use custom folder path. Example:
 // targetDirectory = L"D:\\Photos"; // Uncomment this line
 
-targetDirectory = getDownloadsFolder(); \\ Comment or remove this line
+targetDirectory = getDownloadsFolder(); // Comment or remove this line
 ```
 
 ## Building
