@@ -7,10 +7,23 @@
 #include <windows.h>
 #include <shlobj.h>
 
-// YOU HAVE TO COMPILE THIS PROGRAM WITH C++17 STANDARD: -std=c++17
-// YOU HAVE TO INCLUDE THESE LIBRARIES WHEN COMPILING: -lole32 -lshell32 -luuid
-
 namespace fs = std::filesystem;
+
+// Ignoring temporary files and files that are being downloaded
+// This is necessary because the program will try to move the file while it is being downloaded
+// This will cause an error and the download will fail
+// The program will try to move the file again when the download is complete with its normal extension
+std::set<std::string> extensionsToIgnore = {
+    ".crdownload",
+    ".part",
+    ".download",
+    ".partial",
+    ".ut",
+    ".tmp",
+    ".filepart",
+    ".incomplete",
+    ".!download", 
+};
 
 // The use of wide strings is necessary for the program to work with non-ASCII characters
 
@@ -21,12 +34,18 @@ std::set<fs::path> currentFiles;
 std::set<std::wstring> myExtensions;
 std::unordered_map<std::wstring, std::wstring> myMap;
 
+bool shouldIgnoreFile(const fs::path &filePath)
+{
+    std::string extension = filePath.extension().string();
+    return extensionsToIgnore.count(extension) > 0;
+}
+
 bool detectChange(const fs::path &path)
 {
     currentFiles.clear();
 
     for (const auto &entry : fs::directory_iterator(path))
-        if (entry.is_regular_file())
+        if (entry.path().has_extension() && entry.is_regular_file() && !shouldIgnoreFile(entry.path()))
             currentFiles.insert(entry.path());
 
     if (previousFiles.empty())
@@ -61,18 +80,11 @@ void collectingExtensions()
 {
     try
     {
-        const fs::path p{targetDirectory};
-        for (auto const &dir_entry : fs::directory_iterator{p})
+        for (auto const &dir_entry : currentFiles)
         {
-            if (!dir_entry.path().has_extension())
-                continue;
-
-            if (!dir_entry.is_regular_file())
-                continue;
-
             try
             {
-                myExtensions.insert(dir_entry.path().extension().wstring()); // Use wide strings for extensions
+                myExtensions.insert(dir_entry.extension().wstring()); // Use wide strings for extensions
             }
             catch (const std::exception &e)
             {
@@ -136,19 +148,12 @@ void moveFiles()
 {
     try
     {
-        const fs::path p{targetDirectory};
-        for (auto const &currentFile : fs::directory_iterator{p})
+        for (auto const &currentFile : currentFiles)
         {
-            if (!currentFile.path().has_extension())
-                continue;
-
-            if (!currentFile.is_regular_file())
-                continue;
-
             try
             {
-                std::wstring extension = currentFile.path().extension().wstring(); // Use wide strings for extensions
-                std::wstring filename = currentFile.path().filename().wstring();   // Use wide strings for filenames
+                std::wstring extension = currentFile.extension().wstring(); // Use wide strings for extensions
+                std::wstring filename = currentFile.filename().wstring();   // Use wide strings for filenames
                 std::wstring folderName = myMap.at(extension);
                 std::wstring movePath = targetDirectory / fs::path(folderName) / fs::path(filename); // Use wide strings for paths
                 std::wstring oldPath = targetDirectory / fs::path(filename);
